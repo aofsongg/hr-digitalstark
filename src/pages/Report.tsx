@@ -21,7 +21,7 @@ export default function Report() {
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const { toast } = useToast(); 
 
   const fetchData = async () => {
     setIsLoading(true);
