@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* HR Management Design System - Professional Corporate Theme */
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    --primary: 210 70% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 175 40% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 15% 92%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 175 45% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 210 70% 35%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 215 30% 20%;
+    --sidebar-foreground: 210 15% 92%;
+    --sidebar-primary: 175 45% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 30% 28%;
+    --sidebar-accent-foreground: 210 15% 92%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 175 45% 50%;
+
+    --success: 150 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 40 90% 50%;
+    --warning-foreground: 0 0% 10%;
+    --info: 200 80% 50%;
+    --info-foreground: 0 0% 100%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(210 70% 35%), hsl(175 45% 40%));
+    --gradient-sidebar: linear-gradient(180deg, hsl(215 30% 18%), hsl(215 30% 22%));
+    --shadow-card: 0 4px 20px -4px hsl(215 25% 15% / 0.1);
+    --shadow-elevated: 0 8px 30px -8px hsl(215 25% 15% / 0.15);
+  }
+
+  .dark {
+    --background: 215 30% 12%;
+    --foreground: 210 15% 92%;
+
+    --card: 215 30% 16%;
+    --card-foreground: 210 15% 92%;
+
+    --popover: 215 30% 16%;
+    --popover-foreground: 210 15% 92%;
+
+    --primary: 175 50% 50%;
+    --primary-foreground: 215 30% 12%;
+
+    --secondary: 210 50% 45%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 25% 22%;
+    --muted-foreground: 210 15% 65%;
+
+    --accent: 175 45% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 65% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 25%;
+    --input: 215 25% 25%;
+    --ring: 175 50% 50%;
+
+    --sidebar-background: 215 35% 10%;
+    --sidebar-foreground: 210 15% 85%;
+    --sidebar-primary: 175 50% 50%;
+    --sidebar-primary-foreground: 215 30% 12%;
+    --sidebar-accent: 215 30% 18%;
+    --sidebar-accent-foreground: 210 15% 85%;
+    --sidebar-border: 215 30% 15%;
+    --sidebar-ring: 175 50% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Sarabun', sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-sidebar {
+    background: var(--gradient-sidebar);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
