@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 
 const menuItems = [
   { title: 'User Management', url: '/users', icon: UserCog },
-  { title: 'EMPLOYEE', url: '/employees', icon: Users },
+  { title: 'Employee', url: '/employees', icon: Users },
   { title: 'Salary & Payment', url: '/salary', icon: DollarSign },
   { title: 'Report', url: '/report', icon: FileText },
 ];
@@ -76,7 +76,7 @@ export function AppSidebar() {
           {user && !isCollapsed && (
             <div className="mb-3 animate-fade-in">
               <p className="text-sm font-medium text-sidebar-foreground">
-                {user.name} {user.lname}
+                {user.NAME} {user.LNAME}
               </p>
               <p className="text-xs text-sidebar-foreground/60">{user.EMAIL}</p>
             </div>

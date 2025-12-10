@@ -184,7 +184,7 @@ const thaiMoneyText = (num: number) => {
   const integer = Math.floor(num);
   const satang = Math.round((num - integer) * 100);
 
-  let result = readNumber(integer) + "Baht";
+  let result = readNumber(integer) + "บาท";
 
   if (satang === 0) {
     result += "ถ้วน";
