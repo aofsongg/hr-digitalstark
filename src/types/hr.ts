@@ -56,6 +56,7 @@ export interface SalaryDetail {
   SSO_AMT: number;
   WHT_AMT: number;
   LWP_DAY: number;
+  LWP_AMT:number;
   STUDENT_LOAN: number;
   DEDUCTION: number;
   DEDUCTION_REMARK: string | null;
@@ -69,7 +70,7 @@ export interface SalaryDetail {
   REMARK: string | null;
   CREATE_DATE: string;
   UPDATE_BY: string;
-  TOTAL_SALARY: number;
+  
 }
 
 export const COMPANIES = ['BALIOS', 'DIAMOND HUNTERS', 'IMAGINE WHALES'] as const;

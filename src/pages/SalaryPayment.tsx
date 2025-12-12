@@ -178,7 +178,8 @@ export default function SalaryPayment() {
     delete dataToSave.BANK_ACC_NUMBER;
     delete dataToSave.BANK_ACC_NAME;
     delete dataToSave.TOTAL_SALARY;
-     delete dataToSave.LWP_AMT;
+    delete dataToSave.LWP_AMT;
+     
     if (editingSalary) { const { error } = await supabase.from('SALARY_DETAIL').update(dataToSave).eq('IDA', editingSalary.IDA);   console.log(error);if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.' }); setIsDialogOpen(false); fetchData(); } }
     else { const { error } = await supabase.from('SALARY_DETAIL').insert([dataToSave]);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.' }); setIsDialogOpen(false); fetchData(); } }
 
@@ -559,13 +560,15 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
     "NICK_NAME",
     "DEPARTMENT_NM",
     "BASE_SALARY",
+    "ALLOWANCE_AMT",
     "OT_TIME",
     "OT_AMT",
-    "ALLOWANCE_AMT",
     "BONUS_AMT",
     "SSO_AMT",
     "WHT_AMT",
     "STUDENT_LOAN",
+    "LWP_DAY",
+    "LWP_AMT",
     "DEDUCTION",
     "DEDUCTION_REMARK",
     "NET_PAYMENT",
@@ -591,6 +594,8 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
       BANK_NAME: r.EMPLOYEE.BANK_NAME,
       BANK_ACC_NAME: r.EMPLOYEE.BANK_ACC_NAME,
       BANK_ACC_NUMBER: r.EMPLOYEE.BANK_ACC_NUMBER,
+      LWP_DAY: r.LWP_DAY || 0,
+      LWP_AMT: parseFloat(((r.EMPLOYEE.BASE_SALARY/30) * r.LWP_DAY).toFixed(2) || '0'),
   }));
 
   // header style
