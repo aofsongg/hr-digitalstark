@@ -17,7 +17,7 @@ app.use(express.urlencoded({ limit: '25mb', extended: true }));
 app.post('/api/send-mail', async (req, res) => {
     
   try {
-    const { to, subject, text,cc,fileBase64 } = req.body;
+    const { to, cc, subject, text,fileBase64 } = req.body;
 
     const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -36,7 +36,7 @@ await transporter.verify();
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to,
-      cc,
+      cc:cc,
       subject,
       html:text,
       attachments: [

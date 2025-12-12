@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.post('/api/send-mail', async (req, res) => {
   try {
-       const { to, subject, text,cc,fileBase64 } = req.body;
+       const { to, cc, subject, text,fileBase64 } = req.body;
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -20,7 +20,7 @@ app.post('/api/send-mail', async (req, res) => {
 
     await transporter.sendMail({
       to,
-      cc,
+      cc:cc,
       subject,
       text,
     });
