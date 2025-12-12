@@ -88,7 +88,7 @@ export function AppSidebar() {
             className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           >
             <LogOut className="w-5 h-5" />
-            {!isCollapsed && 'ออกจากระบบ'}
+            {!isCollapsed && 'Logout'}
           </Button>
         </SidebarFooter>
       </div>
