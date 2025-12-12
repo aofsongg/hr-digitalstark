@@ -4,19 +4,58 @@ import { DayPicker } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(
+    props.selected instanceof Date ? props.selected : new Date()
+  );
+
+  const years = React.useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    for (let i = currentYear - 100; i <= currentYear + 10; i++) {
+      years.push(i);
+    }
+    return years;
+  }, []);
+const months = [
+  "January", "February", "March", "April",
+  "May", "June", "July", "August",
+  "September", "October", "November", "December"
+];
+
+  const handleYearChange = (year: string) => {
+    const newDate = new Date(currentMonth);
+    newDate.setFullYear(parseInt(year));
+    setCurrentMonth(newDate);
+  };
+
+  const handleMonthChange = (month: string) => {
+    const newDate = new Date(currentMonth);
+    newDate.setMonth(parseInt(month));
+    setCurrentMonth(newDate);
+  };
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      month={currentMonth}
+      onMonthChange={setCurrentMonth}
+      className={cn("p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        caption: "flex justify-center pt-1 relative items-center gap-1",
+        caption_label: "hidden",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -44,6 +83,40 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
       components={{
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        Caption: ({ displayMonth }) => (
+          <div className="flex justify-center items-center gap-1 py-2">
+            <Select
+              value={displayMonth.getMonth().toString()}
+              onValueChange={handleMonthChange}
+            >
+              <SelectTrigger className="h-7 w-[110px] text-xs font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {months.map((month, index) => (
+                  <SelectItem key={index} value={index.toString()} className="text-xs">
+                    {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={displayMonth.getFullYear().toString()}
+              onValueChange={handleYearChange}
+            >
+              <SelectTrigger className="h-7 w-[80px] text-xs font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {years.map((year) => (
+                  <SelectItem key={year} value={year.toString()} className="text-xs">
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ),
       }}
       {...props}
     />

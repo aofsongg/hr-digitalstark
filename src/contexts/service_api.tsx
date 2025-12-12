@@ -4,7 +4,7 @@ import{supabase} from '../lib/supabaseClient';
 import type { UserInfo } from '@/types/hr';
 
 
-const getMonthNameEn =(monthNumber) =>{
+export const getMonthNameEn =(monthNumber) =>{
   console.log(monthNumber);
   const months = [
     null, // ช่องที่ 0 ไม่ใช้ จะได้เรียกด้วยเลขเดือนตรง ๆ

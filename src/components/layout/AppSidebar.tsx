@@ -54,6 +54,7 @@ export function AppSidebar() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {menuItems.map((item) => (
+                  (item.title =="User Management" && user.NAME=='admin' || item.title !="User Management" ) &&
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild className="h-11">
                       <NavLink

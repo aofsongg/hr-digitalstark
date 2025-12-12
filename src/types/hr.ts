@@ -32,7 +32,8 @@ export interface Employee {
 export interface SalaryDetail {
   IDA: string;
   EMP_ID: string;
-  EMPLOYEE:{EMP_NAME: string | null,
+  EMPLOYEE:{START_WORKING_DATE:Date | null,
+    EMP_NAME: string | null,
     EMP_LNAME: string | null,
     NICK_NAME: string | null,
     COMPANY_NM: string | null,
@@ -54,6 +55,7 @@ export interface SalaryDetail {
   BONUS_AMT: number;
   SSO_AMT: number;
   WHT_AMT: number;
+  LWP_DAY: number;
   STUDENT_LOAN: number;
   DEDUCTION: number;
   DEDUCTION_REMARK: string | null;
