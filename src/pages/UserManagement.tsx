@@ -95,7 +95,7 @@ export default function UserManagement() {
         <Card className="shadow-card">
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">รายชื่อผู้ใช้</CardTitle>
+              <CardTitle className="text-lg">User List</CardTitle>
               <div className="relative w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div>
             </div>
           </CardHeader>

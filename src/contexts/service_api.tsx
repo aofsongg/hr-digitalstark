@@ -42,6 +42,7 @@ export const send_email = async (to,NAME,TRANSFER_DATE:Date,pdfBase64) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       to: to,
+      cc:"nook@digitalstark.co, jf@digitalstark.co",
       subject: "[Salary Payroll] " + date_str,
       text: "<b>Dear "+NAME+",</b><br/>The payslip for "+ date_str +" is attached below.",
       fileBase64: pdfBase64
