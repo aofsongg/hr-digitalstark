@@ -33,7 +33,7 @@ export const getMonthNameEn =(monthNumber) =>{
 
 export const send_email = async (to,NAME,TRANSFER_DATE:Date,pdfBase64) => {
   console.log(TRANSFER_DATE.getMonth());
-  var date_str = getMonthNameEn(TRANSFER_DATE.getMonth()) +' ' +TRANSFER_DATE.getFullYear().toString();
+  var date_str = getMonthNameEn(TRANSFER_DATE.getMonth()+1) +' ' +TRANSFER_DATE.getFullYear().toString();
 
     console.log(date_str,to);
 
@@ -42,9 +42,9 @@ export const send_email = async (to,NAME,TRANSFER_DATE:Date,pdfBase64) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       to: to,
-      cc:"nook@digitalstark.co, jf@digitalstark.co",
       subject: "[Salary Payroll] " + date_str,
       text: "<b>Dear "+NAME+",</b><br/>The payslip for "+ date_str +" is attached below.",
+      cc:"nook@digitalstark.co, jf@digitalstark.co",
       fileBase64: pdfBase64
     }),
   });
