@@ -69,6 +69,7 @@ export interface SalaryDetail {
   REMARK: string | null;
   CREATE_DATE: string;
   UPDATE_BY: string;
+  TOTAL_SALARY: number;
 }
 
 export const COMPANIES = ['BALIOS', 'DIAMOND HUNTERS', 'IMAGINE WHALES'] as const;
