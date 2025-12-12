@@ -9,7 +9,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { to, subject, text, fileBase64 } = req.body;
+    const { to, cc, subject, text, fileBase64 } = req.body;
 
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
@@ -29,12 +29,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to,
+      cc,
       subject,
       html: text,
       attachments: fileBase64
         ? [
             {
-              filename: 'slip.pdf',
+              filename: subject +'.pdf',
               content: fileBase64,
               encoding: 'base64',
             },

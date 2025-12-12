@@ -36,12 +36,12 @@ await transporter.verify();
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to,
-      cc:cc,
+      cc,
       subject,
       html:text,
       attachments: [
   {
-    filename: 'slip.pdf',
+    filename: subject +'.pdf',
     content: fileBase64,
     encoding: 'base64',
   }
