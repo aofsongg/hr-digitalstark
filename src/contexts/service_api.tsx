@@ -31,20 +31,25 @@ export const getMonthNameEn =(monthNumber) =>{
 }
 
 
-export const send_email = async (to,NAME,TRANSFER_DATE:Date,pdfBase64) => {
+export const send_email = async (to,NAME,TRANSFER_DATE:Date,pdfBase64,Remark) => {
   console.log(TRANSFER_DATE.getMonth());
   var date_str = getMonthNameEn(TRANSFER_DATE.getMonth()+1) +' ' +TRANSFER_DATE.getFullYear().toString();
 
     console.log(date_str,to);
-
+    var text_str = "<b>Dear "+NAME+",</b><br/>";
+    if(Remark.length>0){
+     text_str += "<br/> Remark: "+ Remark 
+    }
+    text_str += "<br/> The payslip for "+ date_str +" is attached below."
+    // jf@digitalstark.co
   await fetch("/api/send-mail", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       to: to,
-      cc:"nook@digitalstark.co, jf@digitalstark.co",
+      cc:"nook@digitalstark.co, aofsong1478@gmail.com",
       subject: "[Salary Payroll] " + date_str,
-      text: "<b>Dear "+NAME+",</b><br/>The payslip for "+ date_str +" is attached below.",
+      text: text_str,
       fileBase64: pdfBase64
     }),
   });

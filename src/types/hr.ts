@@ -42,10 +42,11 @@ export interface SalaryDetail {
     POSITION_NM: string | null,
     DEPARTMENT_NM: string | null,
     BASE_SALARY:number,
-  BANK_NAME: string | null,
-  BANK_ACC_NUMBER: string | null,
-  BANK_ACC_NAME: string | null,
-  EMAIL: string | null};
+    BANK_NAME: string | null,
+    BANK_ACC_NUMBER: string | null,
+    BANK_ACC_NAME: string | null,
+    EMAIL: string | null,
+    IDENTIFY_NUMBER};
   COMPANY_NM: string | null;
   EMP_NAME: string | null;
   EMP_LNAME: string | null;

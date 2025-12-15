@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Pencil, Trash2, UserCog } from 'lucide-react';
 import type { UserInfo } from '@/types/hr';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<UserInfo[]>([]);
@@ -100,7 +101,7 @@ export default function UserManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? <div className="text-center py-8 text-muted-foreground">Dowloading...</div> : (
+            {isLoading ?  <LoadingSpinner text="กำลังโหลดข้อมูลพนักงาน..." />  : (
               <Table>
                 <TableHeader><TableRow><TableHead>Username</TableHead><TableHead>Name</TableHead><TableHead>Title</TableHead><TableHead>EMAIL</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader>
                 <TableBody>

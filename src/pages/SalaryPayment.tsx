@@ -27,6 +27,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import {getMonthNameEn} from '@/contexts/service_api';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+
 export default function SalaryPayment() {
   const [salaries, setSalaries] = useState<SalaryDetail[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -70,9 +72,19 @@ export default function SalaryPayment() {
 
     setIsLoading(false);
   };
+
+  const LoadData = async () => {
+ console.log('aaa');
+  // load data
+};
   
 
   useEffect(() => { fetchData(); }, []);
+useEffect(() => {
+  // logic ที่ต้องการให้โหลดใหม่
+  console.log('reload');
+
+}, [isLoading]);
   // useEffect(() => { const term = searchTerm.toLowerCase(); setFilteredSalaries(salaries.filter(s => (s.EMPLOYEE.COMPANY_NM?.toLowerCase() || '').includes(term) || (s.EMP_NAME?.toLowerCase() || '').includes(term) || (s.EMP_LNAME?.toLowerCase() || '').includes(term)|| (s.TRANSFER_DATE?.toLowerCase() || '').includes(term))); }, [searchTerm, salaries]);
   useEffect(() => {
     let filtered = [...salaries];
@@ -194,10 +206,14 @@ export default function SalaryPayment() {
 
   const handleSendEMAIL = () => {
 
-console.log(previewSalary.EMPLOYEE.EMAIL,new Date(previewSalary.TRANSFER_DATE));
+ setIsLoading(true);
+   send_email(previewSalary.EMPLOYEE.EMAIL,previewSalary.EMPLOYEE.EMP_NAME +' ' + previewSalary.EMPLOYEE.EMP_LNAME,new Date(previewSalary.TRANSFER_DATE),generatePDF('SEND_MAIL'),previewSalary.REMARK)
+    .then(() => toast({ title: 'EMAIL Sent', description: `Email sent successfully : ${previewSalary?.EMPLOYEE.EMAIL}` }))
+    .catch(() => toast({ title: 'EMAIL Sent', description: `Failed to send email : ${previewSalary?.EMPLOYEE.EMAIL}` }));
+    setIsLoading(false);
+  };
 
-     console.log(send_email(previewSalary.EMPLOYEE.EMAIL,previewSalary.EMPLOYEE.EMP_NAME +' ' + previewSalary.EMPLOYEE.EMP_LNAME,new Date(previewSalary.TRANSFER_DATE),generatePDF('SEND_MAIL')));
-    // emailjs.send(
+   // emailjs.send(
     //   'YOUR_SERVICE_ID',
     //   'YOUR_TEMPLATE_ID',
     //   {
@@ -210,7 +226,7 @@ console.log(previewSalary.EMPLOYEE.EMAIL,new Date(previewSalary.TRANSFER_DATE));
     // .then(() => setResult('ส่งอีเมลSuccessful. ✅'))
     // .catch(() => setResult('ส่งอีเมลไม่Successful. ❌'));
     
-    toast({ title: 'EMAIL Sent', description: `Sent to ${previewSalary?.EMPLOYEE.EMAIL}` }); };
+  //  toast({ title: 'EMAIL Sent', description: `Sent to ${previewSalary?.EMPLOYEE.EMAIL}` }); 
 
 // ถ้ามีอยู่แล้วใช้ของเดิมได้เลย
 const thaiMoneyText = (num: number) => {
@@ -247,7 +263,11 @@ const thaiMoneyText = (num: number) => {
   return result;
 };
 const generatePDF = (type_p:String) => {
-   if (!previewSalary) return;
+   setIsLoading(true);
+   if (!previewSalary){
+  setIsLoading(false);
+    return;
+   };
 
   const doc = new jsPDF('p', 'mm', 'a4');
   // บอก jsPDF ว่ามีฟอนต์นี้
@@ -351,7 +371,7 @@ const generatePDF = (type_p:String) => {
   lineY = y + 7;
   const name = `${previewSalary.EMP_NAME ?? ''} ${previewSalary.EMP_LNAME ?? ''}`.trim() || '-';
   doc.text(name, left + 50, lineY);
-  doc.text(`${previewSalary.EMP_ID ?? '-'}`, left + 50, (lineY += 6));
+  doc.text(`${previewSalary.EMPLOYEE.IDENTIFY_NUMBER ?? '-'}`, left + 50, (lineY += 6));
   doc.text(`${previewSalary.EMPLOYEE.NICK_NAME ?? ''}`, left + 50, (lineY += 6));
 
   lineY = y + 7;
@@ -523,7 +543,8 @@ doc.text(
 );
 if(type_p=='EXPORT'){
   doc.save(`pay_slip_${previewSalary.EMP_ID}.pdf`);
-}else{
+  setIsLoading(false);
+}else{ 
  return doc.output('datauristring').split(',')[1];
 }
 };
@@ -645,7 +666,7 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
       <div className="space-y-6">
         <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center"><DollarSign className="w-6 h-6 text-primary-foreground" /></div><div><h1 className="text-2xl font-bold">Salary & Payment</h1><p className="text-muted-foreground">Salary Detail</p></div></div><Button onClick={() => handleOpenDialog()} className="gap-2 gradient-primary hover:opacity-90"><Plus className="w-4 h-4" /> Add Item</Button></div>
        <Card className="shadow-card"><CardHeader className="pb-4"><div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><CardTitle className="text-lg">Salary List Item</CardTitle><div className="flex flex-col md:flex-row gap-3 w-full md:w-auto"><div className="relative w-full md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" /></div><Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="บริษัท" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select><Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="เดือน" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select><Button onClick={() => exportSalaryToExcel(filteredSalaries)} className="gap-2 gradient-primary"><Plus className="w-4 h-4" /> Export Excel By Filter</Button></div></div></CardHeader>
-         <CardContent>{isLoading ? <div className="text-center py-8 text-muted-foreground">Dowloading...</div> : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredSalaries.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredSalaries.map(s => { const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT; const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION; return <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>; })}</TableBody></Table></div>}</CardContent>
+         <CardContent>{isLoading ? <LoadingSpinner text="กำลังโหลดข้อมูลพนักงาน..." /> : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredSalaries.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredSalaries.map(s => { const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT; const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION; return <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>; })}</TableBody></Table></div>}</CardContent>
         </Card>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}><DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingSalary ? 'Edit' : 'Add Item'}</DialogTitle></DialogHeader>
@@ -697,7 +718,9 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
               </div>
                  <div className="ext-lg font-medium"><span>Remark :  {previewSalary.REMARK}</span></div>
                 <div className="ext-lg font-medium"><span>Email :  {previewSalary.EMPLOYEE.EMAIL}</span></div>
-              </div>}<DialogFooter><Button variant="outline" onClick={() => setIsPreviewOpen(false)}>Close</Button><Button variant="outline" onClick={handleSendEMAIL} className="gap-2"><Mail className="w-4 h-4" /> Send EMAIL</Button><Button onClick={() => generatePDF('EXPORT')} className="gap-2 gradient-primary hover:opacity-90"><FileText className="w-4 h-4" /> Download PDF</Button></DialogFooter></DialogContent></Dialog>
+              </div>}
+               {isLoading ? <LoadingSpinner text="กำลังโหลดข้อมูลพนักงาน..." />:''}
+               <DialogFooter><Button variant="outline" onClick={() => setIsPreviewOpen(false)}>Close</Button><Button variant="outline" onClick={handleSendEMAIL} className="gap-2"><Mail className="w-4 h-4" /> Send EMAIL</Button><Button onClick={() => generatePDF('EXPORT')} className="gap-2 gradient-primary hover:opacity-90"><FileText className="w-4 h-4" /> Download PDF</Button></DialogFooter></DialogContent></Dialog>
     </DashboardLayout>
   );
 }

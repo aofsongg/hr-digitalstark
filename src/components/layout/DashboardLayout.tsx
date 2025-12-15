@@ -2,7 +2,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -13,7 +13,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Dowloading...</div>
+       <LoadingSpinner size="lg" text="กำลังโหลดระบบ..." />
       </div>
     );
   }
