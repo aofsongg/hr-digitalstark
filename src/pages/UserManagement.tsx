@@ -101,7 +101,7 @@ export default function UserManagement() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ?  <LoadingSpinner text="กำลังโหลดข้อมูลพนักงาน..." />  : (
+            {isLoading ?  <LoadingSpinner text="Loading..." />  : (
               <Table>
                 <TableHeader><TableRow><TableHead>Username</TableHead><TableHead>Name</TableHead><TableHead>Title</TableHead><TableHead>EMAIL</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader>
                 <TableBody>
