@@ -137,6 +137,7 @@ export default function SalaryPayment() {
     
         return {
         ...formData,
+        LWP_DAY:lwp_day,
         LWP_AMT: parseFloat(cal_lwp),
         DEDUCTION: Number(result.toFixed(2)),
       };
