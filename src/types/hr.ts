@@ -14,6 +14,7 @@ export interface Employee {
   COMPANY_NM: string;
   EMAIL: string;
   EMP_ID: string;
+  TITLE: string | null;
   EMP_NAME: string;
   EMP_LNAME: string;
   NICK_NAME: string | null;
@@ -33,6 +34,7 @@ export interface SalaryDetail {
   IDA: string;
   EMP_ID: string;
   EMPLOYEE:{START_WORKING_DATE:Date | null,
+    TITLE: string | null,
     EMP_NAME: string | null,
     EMP_LNAME: string | null,
     NICK_NAME: string | null,
@@ -70,8 +72,11 @@ export interface SalaryDetail {
   REMARK: string | null;
   CREATE_DATE: string;
   UPDATE_BY: string;
+   TITLE: string | null,
   
 }
 
 export const COMPANIES = ['BALIOS', 'DIAMOND HUNTERS', 'IMAGINE WHALES'] as const;
 export type Company = typeof COMPANIES[number];
+export const TITLES = ['Mr.', 'Miss', 'Mrs.'] as const;
+export type Title = typeof TITLES[number];
