@@ -672,7 +672,9 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
     "BANK_ACC_NUMBER",
     "BANK_ACC_NAME",
     "EMAIL",
-    "REMARK"
+    "REMARK",
+    "REPORT_PND",
+    "REPORT_SSO"
   ];
     sheet.addRow(headerOrder);
 
@@ -692,6 +694,8 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
       BANK_ACC_NUMBER: r.EMPLOYEE.BANK_ACC_NUMBER,
       LWP_DAY: r.LWP_DAY || 0,
       LWP_AMT: parseFloat(((r.EMPLOYEE.BASE_SALARY/30) * r.LWP_DAY).toFixed(2) || '0'),
+      REPORT_PND: r.BASE_SALARY + r.OT_AMT + r.ALLOWANCE_AMT + r.BONUS_AMT  + r.HOLIDAY_AMT,
+      REPORT_SSO: r.EMPLOYEE.BASE_SALARY,
   }));
 
   // header style

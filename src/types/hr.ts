@@ -77,7 +77,9 @@ export interface SalaryDetail {
   SENT_DATE: string | null,
   HOLIDAY_DAY: number,
   HOLIDAY_AMT: number,
-  HOLIDAY_MP: number,
+  HOLIDAY_MP: number  ,
+  REPORT_PND: number,
+  REPORT_SSO: number,
 }
 
 export const COMPANIES = ['BALIOS', 'DIAMOND HUNTERS', 'IMAGINE WHALES'] as const;
