@@ -44,7 +44,7 @@ export default function SalaryPayment() {
   const [previewSalary, setPreviewSalary] = useState<SalaryDetail | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<string>('');
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
-  const [formData, setFormData] = useState({ EMP_ID: '', COMPANY_NM: '', EMP_NAME: '', EMP_LNAME: '', NICK_NAME: '',TOTAL_SALARY:0, BASE_SALARY: 0, OT_TIME: 0, OT_AMT: 0, ALLOWANCE_AMT: 0, BONUS_AMT: 0, SSO_AMT: 0, WHT_AMT: 0,LWP_DAY:0,LWP_AMT:0, STUDENT_LOAN: 0, DEDUCTION: 0,DEDUCTION_REMARK:'OTHER', NET_PAYMENT: 0, TRANSFER_DATE: null as Date | null, BANK_NAME: '', BANK_ACC_NUMBER: '', BANK_ACC_NAME: '', DEPARTMENT_NM: '', EMAIL: '' ,REMARK:'',SENT_DATE:null});
+  const [formData, setFormData] = useState({ EMP_ID: '', COMPANY_NM: '', EMP_NAME: '', EMP_LNAME: '', NICK_NAME: '',TOTAL_SALARY:0, BASE_SALARY: 0, OT_TIME: 0, OT_AMT: 0, ALLOWANCE_AMT: 0, BONUS_AMT: 0, SSO_AMT: 0, WHT_AMT: 0,LWP_DAY:0,LWP_AMT:0, STUDENT_LOAN: 0, DEDUCTION: 0,DEDUCTION_REMARK:'OTHER', NET_PAYMENT: 0, TRANSFER_DATE: null as Date | null, BANK_NAME: '', BANK_ACC_NUMBER: '', BANK_ACC_NAME: '', DEPARTMENT_NM: '', EMAIL: '' ,REMARK:'',SENT_DATE:null,HOLIDAY_DAY: 0,HOLIDAY_AMT: 0,HOLIDAY_MP: 0});
   const { toast } = useToast();
   const [pdfBase64, setPdfBase64] = useState<string>('');
   const [result_deduction, setResultDeduction] = useState<number>(0);
@@ -90,7 +90,6 @@ export default function SalaryPayment() {
   // load data
 };
   
-
   useEffect(() => { fetchData(); }, []);
 useEffect(() => {
   // logic ที่ต้องการให้โหลดใหม่
@@ -108,7 +107,7 @@ useEffect(() => {
   }, [searchTerm, filterCompany, filterMonth, salaries]);
 
   useEffect(() => { if (selectedCompany) setFilteredEmployees(employees.filter(e => e.COMPANY_NM === selectedCompany)); else setFilteredEmployees([]); }, [selectedCompany, employees]);
-  useEffect(() => { const income = formData.BASE_SALARY + formData.OT_AMT + formData.ALLOWANCE_AMT + formData.BONUS_AMT; const ded = formData.SSO_AMT + formData.WHT_AMT + formData.STUDENT_LOAN + formData.DEDUCTION; setFormData(p => ({ ...p, NET_PAYMENT: income - ded })); }, [formData.BASE_SALARY, formData.OT_AMT, formData.ALLOWANCE_AMT, formData.BONUS_AMT, formData.SSO_AMT, formData.WHT_AMT, formData.STUDENT_LOAN, formData.DEDUCTION]);
+  useEffect(() => { const income = formData.BASE_SALARY + formData.OT_AMT + formData.ALLOWANCE_AMT + formData.BONUS_AMT  + formData.HOLIDAY_AMT; const ded = formData.SSO_AMT + formData.WHT_AMT + formData.STUDENT_LOAN + formData.DEDUCTION; setFormData(p => ({ ...p, NET_PAYMENT: income - ded })); }, [formData.BASE_SALARY, formData.OT_AMT, formData.ALLOWANCE_AMT, formData.BONUS_AMT,formData.HOLIDAY_AMT, formData.SSO_AMT, formData.WHT_AMT, formData.STUDENT_LOAN, formData.DEDUCTION]);
   // useEffect(() => { const result = result_deduction; setFormData(p => ({ ...p, DEDUCTION: result_deduction}));});
     const handleDelete = async (IDA: string) => { if (!confirm('Do you want to delete the data?')) return; const { error } = await supabase.from('SALARY_DETAIL').delete().eq('IDA', IDA); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Deleted successfully.' }); fetchData(); } };
   const formatCurrency = (amt: number) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amt);
@@ -150,6 +149,7 @@ useEffect(() => {
     var cal_ot = ((base_salary/30/8)*ot_time*2).toFixed(2);
        return parseFloat(cal_ot);
   }
+
   const onChange_lwp = (lwp_day:number,base_salary:number)=>{
     var cal_lwp = ((base_salary/30)*lwp_day).toFixed(2);
     var result=0;
@@ -170,8 +170,22 @@ useEffect(() => {
       };
   }
 
+  const onChange_holiday = (HD_day:number,base_salary:number,HD_MP:number)=>{
+    var cal_hd = ((base_salary/30)*HD_day*HD_MP).toFixed(2);
+       return parseFloat(cal_hd);
+  }
+
   const handleOpenDialog = async (setData:boolean,salary?: SalaryDetail) => {
-   
+     var chk_holiday_mp =0;
+     var now = new Date();
+     var Years = now.getFullYear();
+     var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 25);
+        console.log(TF_DATE)
+        console.log(Years);
+
+        if(Years == 2025){chk_holiday_mp =1.5}else{chk_holiday_mp=1};
+        
+
       if (salary) { 
     const  { data, error } = await supabase.rpc('get_salary_with_emp_obj', {
     p_ida : salary.IDA
@@ -181,7 +195,11 @@ useEffect(() => {
       // data[0].add(LWP_AMT: Number(cal_lwp));
       //  setFormData({ ...formData, LWP_AMT: Number(cal_lwp) });
       setEditingSalary(salary);
+      if(data[0].HOLIDAY_MP == null){
+        data[0].HOLIDAY_MP = chk_holiday_mp
+      };
       data[0].LWP_AMT = data[0].LWP_AMT.toFixed(2);
+      
        setFormData(data[0]);
     
          setSelectedCompany(data[0].COMPANY_NM);
@@ -189,7 +207,9 @@ useEffect(() => {
       //  setSelectedCompany(salary.COMPANY_NM || '');
       // setFormData({ EMP_ID: camelObj.EMP_ID, COMPANY_NM: camelObj.COMPANY_NM || '', EMP_NAME: camelObj.EMP_NAME || '', EMP_LNAME: camelObj.EMP_LNAME || '', NICK_NAME: camelObj.NICK_NAME || '', BASE_SALARY: camelObj.BASE_SALARY, OT_TIME: camelObj.OT_TIME, OT_AMT: camelObj.OT_AMT, ALLOWANCE_AMT: camelObj.ALLOWANCE_AMT, BONUS_AMT: camelObj.BONUS_AMT, SSO_AMT: camelObj.SSO_AMT, WHT_AMT: camelObj.WHT_AMT, STUDENT_LOAN: camelObj.STUDENT_LOAN, DEDUCTION: camelObj.DEDUCTION, NET_PAYMENT: camelObj.NET_PAYMENT, TRANSFER_DATE: camelObj.TRANSFER_DATE ? new Date(camelObj.TRANSFER_DATE) : null, BANK_NAME: camelObj.BANK_NAME || '', BANK_ACC_NUMBER: camelObj.BANK_ACC_NUMBER || '', BANK_ACC_NAME: camelObj.BANK_ACC_NAME || '', DEPARTMENT_NM: camelObj.DEPARTMENT_NM || '', EMAIL: camelObj.EMAIL || '' }); 
     }
-      else { setEditingSalary(null); setSelectedCompany(''); setFormData({ EMP_ID: '', COMPANY_NM: '', EMP_NAME: '', EMP_LNAME: '', NICK_NAME: '',TOTAL_SALARY:0.00, BASE_SALARY: 0.00, OT_TIME: 0.00, OT_AMT: 0.00, ALLOWANCE_AMT: 0.00, BONUS_AMT: 0.00, SSO_AMT: 0.00, WHT_AMT: 0.00,LWP_DAY:0,LWP_AMT:0, STUDENT_LOAN: 0.00, DEDUCTION: 0.00,DEDUCTION_REMARK:'OTHER', NET_PAYMENT: 0.00, TRANSFER_DATE: null, BANK_NAME: '', BANK_ACC_NUMBER: '', BANK_ACC_NAME: '', DEPARTMENT_NM: '', EMAIL: '',REMARK:'' ,SENT_DATE:null}); }
+      else {
+        
+        setEditingSalary(null); setSelectedCompany(''); setFormData({ EMP_ID: '', COMPANY_NM: '', EMP_NAME: '', EMP_LNAME: '', NICK_NAME: '',TOTAL_SALARY:0.00, BASE_SALARY: 0.00, OT_TIME: 0.00, OT_AMT: 0.00, ALLOWANCE_AMT: 0.00, BONUS_AMT: 0.00, SSO_AMT: 0.00, WHT_AMT: 0.00,LWP_DAY:0,LWP_AMT:0, STUDENT_LOAN: 0.00, DEDUCTION: 0.00,DEDUCTION_REMARK:'OTHER', NET_PAYMENT: 0.00, TRANSFER_DATE: TF_DATE, BANK_NAME: '', BANK_ACC_NUMBER: '', BANK_ACC_NAME: '', DEPARTMENT_NM: '', EMAIL: '',REMARK:'' ,SENT_DATE:null,HOLIDAY_DAY: 0,HOLIDAY_AMT: 0,HOLIDAY_MP: chk_holiday_mp}); }
    
       setIsDialogOpen(setData);
     
@@ -199,11 +219,11 @@ useEffect(() => {
     console.log(formData);
     if (!formData.EMP_ID || !formData.COMPANY_NM) { toast({ variant: 'destructive', title: 'Error', description: 'Please select a company and an employee.' }); return; }
     const dataToSave = { ...formData, TRANSFER_DATE: formData.TRANSFER_DATE ? format(formData.TRANSFER_DATE, 'yyyy-MM-dd') : null };
-console.log( new Date().setHours(new Date().getHours() + 7), new Date(),new Date().getHours() + 7);
+    console.log( new Date().setHours(new Date().getHours() + 7), new Date(),new Date().getHours() + 7);
    if(sent_mail == true){
-    const thaiDate = new Date(
-  new Date().setHours(new Date().getHours() + 7)
-);
+      const thaiDate = new Date(
+      new Date().setHours(new Date().getHours() + 7)
+    );
     dataToSave.SENT_DATE = thaiDate;
     }else{
       if(dataToSave.SENT_DATE != null){
@@ -234,9 +254,7 @@ console.log( new Date().setHours(new Date().getHours() + 7), new Date(),new Date
   };
 
 
-
   const handleSendEMAIL = () => {
-
  setIsLoading(true);
    send_email(previewSalary.EMPLOYEE.EMAIL,previewSalary.EMPLOYEE.EMP_NAME +' ' + previewSalary.EMPLOYEE.EMP_LNAME,new Date(previewSalary.TRANSFER_DATE),generatePDF('SEND_MAIL'),previewSalary.REMARK)
     .then(() => (toast({ title: 'EMAIL Sent', description: `Email sent successfully : ${previewSalary?.EMPLOYEE.EMAIL}` }),
@@ -440,17 +458,34 @@ const generatePDF = (type_p:String) => {
   y = tableHeaderTopY + tableHeaderH;
 
   type Row = { label: string; earning?: number; deduction?: number; };
-
-  const rows: Row[] = [
+  var rows: Row[]=[];
+if(previewSalary.HOLIDAY_AMT > 0){
+  console.log("HOLIDAY_AMT");
+  rows = [
     { label: 'Base Salary',      earning: previewSalary.BASE_SALARY },
     { label: 'Allowance',         earning: previewSalary.ALLOWANCE_AMT},
     { label: 'OT',                earning: previewSalary.OT_AMT },
-    { label: 'Bonus',             earning: previewSalary.BONUS_AMT},
+    { label: 'Special Allowance',             earning: previewSalary.BONUS_AMT},
+    { label: 'holiday leave remain',             earning: previewSalary.HOLIDAY_AMT},
     { label: 'SSO Contribution',  deduction: previewSalary.SSO_AMT },
     { label: 'Student Loan Fund', deduction: previewSalary.STUDENT_LOAN },
     { label: 'Withholding Tax',   deduction: previewSalary.WHT_AMT },
     { label: 'Deduction ('+ previewSalary.DEDUCTION_REMARK +')', deduction: previewSalary.DEDUCTION },
   ];
+}else{
+   console.log("GGGG");
+   rows = [
+    { label: 'Base Salary',      earning: previewSalary.BASE_SALARY },
+    { label: 'Allowance',         earning: previewSalary.ALLOWANCE_AMT},
+    { label: 'OT',                earning: previewSalary.OT_AMT },
+    { label: 'Special Allowance',             earning: previewSalary.BONUS_AMT},
+    { label: 'SSO Contribution',  deduction: previewSalary.SSO_AMT },
+    { label: 'Student Loan Fund', deduction: previewSalary.STUDENT_LOAN },
+    { label: 'Withholding Tax',   deduction: previewSalary.WHT_AMT },
+    { label: 'Deduction ('+ previewSalary.DEDUCTION_REMARK +')', deduction: previewSalary.DEDUCTION },
+  ];
+}
+ console.log(rows);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
@@ -494,7 +529,8 @@ const generatePDF = (type_p:String) => {
     (previewSalary.BASE_SALARY ?? 0) +
     (previewSalary.BONUS_AMT ?? 0) +
     (previewSalary.OT_AMT ?? 0) +
-    (previewSalary.ALLOWANCE_AMT ?? 0);
+    (previewSalary.ALLOWANCE_AMT ?? 0)+
+    (previewSalary.HOLIDAY_AMT ?? 0);
 
   const totalDeductions =
     (previewSalary.SSO_AMT ?? 0) +
@@ -625,6 +661,9 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
     "STUDENT_LOAN",
     "LWP_DAY",
     "LWP_AMT",
+    "HOLIDAY_DAY",
+    "HOLIDAY_MP",
+    "HOLIDAY_AMT",
     "DEDUCTION",
     "DEDUCTION_REMARK",
     "NET_PAYMENT",
@@ -698,7 +737,7 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
       <div className="space-y-6">
         <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center"><DollarSign className="w-6 h-6 text-primary-foreground" /></div><div><h1 className="text-2xl font-bold">Salary & Payment</h1><p className="text-muted-foreground">Salary Detail</p></div></div><Button onClick={() => handleOpenDialog(true)} className="gap-2 gradient-primary hover:opacity-90"><Plus className="w-4 h-4" /> Add Item</Button></div>
        <Card className="shadow-card"><CardHeader className="pb-4"><div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><CardTitle className="text-lg">Salary List Item</CardTitle><div className="flex flex-col md:flex-row gap-3 w-full md:w-auto"><div className="relative w-full md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" /></div><Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="บริษัท" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select><Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="เดือน" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select><Button onClick={() => exportSalaryToExcel(filteredSalaries)} className="gap-2 gradient-primary"><Plus className="w-4 h-4" /> Export Excel By Filter</Button></div></div></CardHeader>
-         <CardContent>{isLoading ? <LoadingSpinner text="Loading..." /> : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead>Sent Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredSalaries.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredSalaries.map(s => { const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT; const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION; return <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell>{s.SENT_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(true,s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>; })}</TableBody></Table></div>}</CardContent>
+         <CardContent>{isLoading ? <LoadingSpinner text="Loading..." /> : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead>Sent Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredSalaries.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredSalaries.map(s => { const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT + s.HOLIDAY_AMT; const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION; return <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell>{s.SENT_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(true,s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>; })}</TableBody></Table></div>}</CardContent>
         </Card>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}><DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingSalary ? 'Edit' : 'Add Item'}</DialogTitle></DialogHeader>
@@ -707,11 +746,12 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
           <Label>Employee *</Label><Select value={formData.EMP_ID} onValueChange={handleEmployeeSelect} disabled={!selectedCompany}><SelectTrigger><SelectValue placeholder="Select Employee" /></SelectTrigger><SelectContent className="bg-popover">{filteredEmployees.map(e => <SelectItem key={e.EMP_ID} value={e.EMP_ID}>{e.TITLE} {e.EMP_NAME} {e.EMP_LNAME} ({e.NICK_NAME})</SelectItem>)}</SelectContent></Select></div></div>
           <div className="grid grid-cols-3 gap-4"><div className="grid gap-2"><Label>Employee ID</Label><Input value={formData.EMP_ID} disabled className="bg-muted" /></div><div className="grid gap-2"><Label>Nickname</Label><Input value={formData.NICK_NAME} disabled className="bg-muted" /></div><div className="grid gap-2"><Label>Department</Label><Input value={formData.DEPARTMENT_NM} disabled className="bg-muted" /></div></div>
           <div className="border-t pt-4"><h4 className="font-medium mb-3 text-success">Income</h4><div className="grid grid-cols-4 gap-4">
-            <div className="grid gap-2"><Label>Total Compensation</Label><Input value={formData.TOTAL_SALARY} disabled className="bg-muted" /></div><div className="grid gap-2"><Label>Base Salary</Label><Input type="number" value={formData.BASE_SALARY} onChange={e => setFormData({ ...formData, BASE_SALARY: Number(e.target.value), SSO_AMT:onChange_Cal_SOS(Number(e.target.value)) })} /></div><div className="grid gap-2"><Label>Allowance</Label><Input type="number" value={formData.ALLOWANCE_AMT} onChange={e => setFormData({ ...formData, ALLOWANCE_AMT: Number(e.target.value) })} /></div><div className="grid gap-2"><Label>OT (Hour)</Label><Input type="number" value={formData.OT_TIME} onChange={e => setFormData({ ...formData, OT_TIME: Number(e.target.value),OT_AMT:onChange_OT(Number(e.target.value),formData.TOTAL_SALARY) })} /></div><div className="grid gap-2"><Label>OT (Baht)</Label><Input type="number" value={formData.OT_AMT} onChange={e => setFormData({ ...formData, OT_AMT: Number(e.target.value) })} disabled className="bg-muted" /></div><div className="grid gap-2"><Label>Bonus</Label><Input type="number" value={formData.BONUS_AMT} onChange={e => setFormData({ ...formData, BONUS_AMT: Number(e.target.value) })} /></div></div></div>
+            <div className="grid gap-2"><Label>Total Compensation</Label><Input value={formData.TOTAL_SALARY} disabled className="bg-muted" /></div><div className="grid gap-2"><Label>Base Salary</Label><Input type="number" value={formData.BASE_SALARY} onChange={e => setFormData({ ...formData, BASE_SALARY: Number(e.target.value), SSO_AMT:onChange_Cal_SOS(Number(e.target.value)) })} /></div><div className="grid gap-2"><Label>Allowance</Label><Input type="number" value={formData.ALLOWANCE_AMT} onChange={e => setFormData({ ...formData, ALLOWANCE_AMT: Number(e.target.value) })} /></div><div className="grid gap-2"><Label>OT (Hour)</Label><Input type="number" value={formData.OT_TIME} onChange={e => setFormData({ ...formData, OT_TIME: Number(e.target.value),OT_AMT:onChange_OT(Number(e.target.value),formData.TOTAL_SALARY) })} /></div><div className="grid gap-2"><Label>OT (Baht)</Label><Input type="number" value={formData.OT_AMT} onChange={e => setFormData({ ...formData, OT_AMT: Number(e.target.value) })} disabled className="bg-muted" /></div><div className="grid gap-2"><Label>Bonus</Label><Input type="number" value={formData.BONUS_AMT} onChange={e => setFormData({ ...formData, BONUS_AMT: Number(e.target.value) })} /></div>
+            <div className="grid gap-2"><Label>Holiday leave remain(Day)</Label><Input type="number" value={formData.HOLIDAY_DAY} onChange={e => setFormData({ ...formData, HOLIDAY_DAY: Number(e.target.value),HOLIDAY_AMT:onChange_holiday(Number(e.target.value),formData.TOTAL_SALARY,formData.HOLIDAY_MP) })} /></div><div className="grid gap-2"><Label>Returned rate</Label><Input type="number" value={formData.HOLIDAY_MP} onChange={e => setFormData({ ...formData, HOLIDAY_MP: Number(e.target.value),HOLIDAY_AMT:onChange_holiday(formData.HOLIDAY_DAY,formData.TOTAL_SALARY,Number(e.target.value))  })} /></div><div className="grid gap-2"><Label>Total return (Baht)</Label><Input type="number" value={formData.HOLIDAY_AMT} onChange={e => setFormData({ ...formData, HOLIDAY_AMT: Number(e.target.value) })} disabled className="bg-muted" /></div></div></div>
           <div className="border-t pt-4"><h4 className="font-medium mb-3 text-destructive">Deduction Item</h4><div className="grid grid-cols-4 gap-4"><div className="grid gap-2"><Label>SSO Contribution</Label><Input type="number" value={formData.SSO_AMT} onChange={e => setFormData({ ...formData, SSO_AMT: Number(e.target.value) })} /></div><div className="grid gap-2"><Label>Withholding Tax</Label><Input type="number" value={formData.WHT_AMT} onChange={e => setFormData({ ...formData, WHT_AMT: Number(e.target.value) })} /></div><div className="grid gap-2"><Label>Student Loan Fund .</Label><Input type="number" value={formData.STUDENT_LOAN} onChange={e => setFormData({ ...formData, STUDENT_LOAN: Number(e.target.value) })} /></div>
           <div className="grid gap-2"><Label>Leave without pay(Day)</Label><Input type="number" value={formData.LWP_DAY} onChange={e => {setFormData({ ...formData, LWP_DAY: Number(e.target.value)});setFormData(onChange_lwp(Number(e.target.value),formData.TOTAL_SALARY));}} /></div>
-                    <div className="grid gap-2"><Label>Leave without pay(Amount)</Label><Input type="number" value={formData.LWP_AMT}  disabled className="bg-muted"/></div>
-          <div className="grid gap-2"><Label>Other Deduction   (Sum LWP)</Label><Input type="number" value={formData.DEDUCTION} onChange={e => setFormData({ ...formData, DEDUCTION: Number(e.target.value) })} /></div></div></div>
+              <div className="grid gap-2"><Label>Leave without pay(Amount)</Label><Input type="number" value={formData.LWP_AMT}  disabled className="bg-muted"/></div>
+          <div className="grid gap-2"><Label>Other Deduction <br/>(Sum LWP)</Label><Input type="number" value={formData.DEDUCTION} onChange={e => setFormData({ ...formData, DEDUCTION: Number(e.target.value) })} /></div></div></div>
            <div className="border-t pt-4"><Label>Remark Other Deduction </Label><Input value={formData.DEDUCTION_REMARK} onChange={e => setFormData({ ...formData, DEDUCTION_REMARK: String(e.target.value) })} /></div>
           <div className="border-t pt-4"><div className="grid grid-cols-2 gap-4"><div className="grid gap-2"><Label>Transfer Date</Label><Popover><PopoverTrigger asChild><Button variant="outline" className={cn('justify-start text-left font-normal', !formData.TRANSFER_DATE && 'text-muted-foreground')}><CalendarIcon className="mr-2 h-4 w-4" />{formData.TRANSFER_DATE ? format(formData.TRANSFER_DATE, 'dd/MM/yyyy') : 'Select Date'}</Button></PopoverTrigger><PopoverContent className="w-auto p-0 bg-popover" align="start"><Calendar mode="single" selected={formData.TRANSFER_DATE || undefined} onSelect={d => setFormData({ ...formData, TRANSFER_DATE: d || null })} initialFocus className="pointer-events-auto" /></PopoverContent></Popover></div><div className="grid gap-2"><Label className="text-lg font-semibold">Net Amount</Label><div className="text-2xl font-bold text-primary">{formatCurrency(formData.NET_PAYMENT)}</div></div></div></div>
           <div className="border-t pt-4"><div className="grid gap-2"><Label>Remark</Label><textarea value={formData.REMARK}  onChange={e => setFormData({ ...formData, REMARK: String(e.target.value) })}/></div></div>
@@ -732,8 +772,10 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
             <div className="space-y-1 text-sm"><div className="flex justify-between"><span>Base Salary</span>
             <span>{formatCurrency(previewSalary.BASE_SALARY)}</span></div><div className="flex justify-between"><span>Allowance</span>
             <span>{formatCurrency(previewSalary.ALLOWANCE_AMT)}</span></div><div className="flex justify-between"><span>OT</span>
-            <span>{formatCurrency(previewSalary.OT_AMT)}</span></div><div className="flex justify-between"><span>Bonus</span>
-            <span>{formatCurrency(previewSalary.BONUS_AMT)}</span></div>
+            <span>{formatCurrency(previewSalary.OT_AMT)}</span></div><div className="flex justify-between"><span>Special Allowance</span>
+            <span>{formatCurrency(previewSalary.BONUS_AMT)}</span></div><div className="flex justify-between"><span>Holiday leave remain</span>
+            <span>{formatCurrency(previewSalary.HOLIDAY_AMT)}</span></div>
+            
             <div className="flex justify-between"><span></span>
             <span></span></div></div></div><div>
               <h4 className="font-medium text-destructive mb-2">Deduction Item</h4>

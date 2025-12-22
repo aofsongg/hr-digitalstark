@@ -75,6 +75,9 @@ export interface SalaryDetail {
   UPDATE_BY: string;
    TITLE: string | null,
   SENT_DATE: string | null,
+  HOLIDAY_DAY: number,
+  HOLIDAY_AMT: number,
+  HOLIDAY_MP: number,
 }
 
 export const COMPANIES = ['BALIOS', 'DIAMOND HUNTERS', 'IMAGINE WHALES'] as const;

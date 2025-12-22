@@ -45,7 +45,7 @@ export default function Report() {
 
   const formatCurrency = (amt: number) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amt);
   const getUniqueMonths = () => Array.from(new Set(salaries.filter(s => s.TRANSFER_DATE).map(s => s.TRANSFER_DATE!.substring(0, 7)))).sort().reverse();
-  const totals = filteredSalaries.reduce((a, c) => ({ totalIncome: a.totalIncome + c.BASE_SALARY + c.OT_AMT + c.ALLOWANCE_AMT + c.BONUS_AMT, totalDEDUCTIONs: a.totalDEDUCTIONs + c.SSO_AMT + c.WHT_AMT + c.STUDENT_LOAN + c.DEDUCTION, totalNet: a.totalNet + c.NET_PAYMENT }), { totalIncome: 0, totalDEDUCTIONs: 0, totalNet: 0 });
+  const totals = filteredSalaries.reduce((a, c) => ({ totalIncome: a.totalIncome + c.BASE_SALARY + c.OT_AMT + c.ALLOWANCE_AMT + c.BONUS_AMT+ c.HOLIDAY_AMT, totalDEDUCTIONs: a.totalDEDUCTIONs + c.SSO_AMT + c.WHT_AMT + c.STUDENT_LOAN + c.DEDUCTION, totalNet: a.totalNet + c.NET_PAYMENT }), { totalIncome: 0, totalDEDUCTIONs: 0, totalNet: 0 });
 
   const generateReportPDF = () => {
     const doc = new jsPDF('landscape');
@@ -56,7 +56,7 @@ export default function Report() {
     });
     doc.setFontSize(18); doc.text('Salary Report', 148, 15, { align: 'center' });
     doc.setFontSize(10); doc.text(`Generated: ${new Date().toLocaleDateString('th-TH')}`, 148, 22, { align: 'center' });
-    autoTable(doc, { startY: 35, head: [['EMP ID', 'Name', 'Company', 'Base', 'Income', 'DEDUCTIONs', 'Net', 'Date']], body: filteredSalaries.map(s => [s.EMP_ID, `${s.EMPLOYEE.TITLE} ${s.EMPLOYEE.EMP_NAME} ${s.EMPLOYEE.EMP_LNAME}`+'(' + s.EMPLOYEE.NICK_NAME + ')', s.EMPLOYEE.COMPANY_NM || '-', formatCurrency(s.BASE_SALARY), formatCurrency(s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT), formatCurrency(s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION), formatCurrency(s.NET_PAYMENT), s.TRANSFER_DATE || '-']), foot: [['', 'TOTAL', '', '', formatCurrency(totals.totalIncome), formatCurrency(totals.totalDEDUCTIONs), formatCurrency(totals.totalNet), '']], styles: { fontSize: 8 }, headStyles: { fillColor: [30, 58, 95] }, footStyles: { fillColor: [30, 58, 95] } });
+    autoTable(doc, { startY: 35, head: [['EMP ID', 'Name', 'Company', 'Base', 'Income', 'DEDUCTIONs', 'Net', 'Date']], body: filteredSalaries.map(s => [s.EMP_ID, `${s.EMPLOYEE.TITLE} ${s.EMPLOYEE.EMP_NAME} ${s.EMPLOYEE.EMP_LNAME}`+'(' + s.EMPLOYEE.NICK_NAME + ')', s.EMPLOYEE.COMPANY_NM || '-', formatCurrency(s.BASE_SALARY), formatCurrency(s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT+ s.HOLIDAY_AMT), formatCurrency(s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION), formatCurrency(s.NET_PAYMENT), s.TRANSFER_DATE || '-']), foot: [['', 'TOTAL', '', '', formatCurrency(totals.totalIncome), formatCurrency(totals.totalDEDUCTIONs), formatCurrency(totals.totalNet), '']], styles: { fontSize: 8 }, headStyles: { fillColor: [30, 58, 95] }, footStyles: { fillColor: [30, 58, 95] } });
     doc.save(`salary_report_${new Date().toISOString().split('T')[0]}.pdf`);
     toast({ title: 'Download Successful' });
   };
