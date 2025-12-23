@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Search, Pencil, Trash2, UserCog } from 'lucide-react';
 import type { UserInfo } from '@/types/hr';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from '@/components/TablePagination';
 
 export default function UserManagement() {
   const [users, setUsers] = useState<UserInfo[]>([]);

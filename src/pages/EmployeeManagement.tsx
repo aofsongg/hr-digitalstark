@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 // import { supabase } from '@/integrations/supabase/client';
 import { supabase } from '../lib/supabaseClient';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Employee } from '@/types/hr';
 import { COMPANIES, TITLES } from '@/types/hr';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from '@/components/TablePagination';
 
 
 export default function EmployeeManagement() {
@@ -29,7 +31,7 @@ export default function EmployeeManagement() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({ COMPANY_NM: '', EMAIL: '', EMP_ID: '',TITLE:'' ,EMP_NAME: '', EMP_LNAME: '', NICK_NAME: '', IDENTIFY_NUMBER: '', POSITION_NM: '', DEPARTMENT_NM: '', START_WORKING_DATE: null as Date | null, BASE_SALARY: 0, BANK_NAME: '', BANK_ACC_NUMBER: '', BANK_ACC_NAME: '' });
   const { toast } = useToast();
-
+  
   const fetchEmployees = async () => {
     setIsLoading(true);
     const { data, error } = await supabase.from('EMPLOYEE').select('*').order('CREATE_DATE', { ascending: false });
@@ -37,7 +39,9 @@ export default function EmployeeManagement() {
     else { setEmployees(data as Employee[]); setFilteredEmployees(data as Employee[]); }
     setIsLoading(false);
   };
+const { currentPage, totalPages, paginatedItems, goToPage, resetPage, totalItems, startIndex, endIndex } = usePagination(filteredEmployees);
 
+  useEffect(() => { resetPage(); }, [searchTerm]);
   useEffect(() => { fetchEmployees(); }, []);
 
   useEffect(() => {
@@ -79,8 +83,28 @@ export default function EmployeeManagement() {
           <Button onClick={() => handleOpenDialog()} className="gap-2 gradient-primary hover:opacity-90"><Plus className="w-4 h-4" /> Add Employee</Button>
         </div>
         <Card className="shadow-card"><CardHeader className="pb-4"><div className="flex items-center justify-between"><CardTitle className="text-lg">Employee Name List</CardTitle><div className="relative w-80"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" /></div></div></CardHeader>
-          <CardContent>{isLoading ?  <LoadingSpinner text="Loading..." />  : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee ID</TableHead><TableHead>Name</TableHead><TableHead>Position</TableHead><TableHead>Department</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredEmployees.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredEmployees.map(e => <TableRow key={e.IDA}><TableCell>{e.COMPANY_NM}</TableCell><TableCell className="font-medium">{e.EMP_ID}</TableCell><TableCell>{e.TITLE} {e.EMP_NAME} {e.EMP_LNAME} ({e.NICK_NAME})</TableCell><TableCell>{e.POSITION_NM || '-'}</TableCell><TableCell>{e.DEPARTMENT_NM || '-'}</TableCell><TableCell className="text-right">{formatCurrency(e.BASE_SALARY)}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={() => handleOpenDialog(e)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(e.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>)}</TableBody></Table></div>}</CardContent>
+             <CardContent>
+            {isLoading ? <LoadingSpinner text="Loading..." /> : (
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee ID</TableHead><TableHead>Name</TableHead><TableHead>Position</TableHead><TableHead>Department</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {paginatedItems.length === 0 ? (
+                        <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow>
+                      ) : paginatedItems.map(e => (
+                        <TableRow key={e.IDA}><TableCell>{e.COMPANY_NM}</TableCell><TableCell className="font-medium">{e.EMP_ID}</TableCell><TableCell>{e.TITLE} {e.EMP_NAME} {e.EMP_LNAME} ({e.NICK_NAME})</TableCell><TableCell>{e.POSITION_NM || '-'}</TableCell><TableCell>{e.DEPARTMENT_NM || '-'}</TableCell><TableCell className="text-right">{formatCurrency(e.BASE_SALARY)}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-2"><Button size="sm" variant="outline" onClick={() => handleOpenDialog(e)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(e.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} startIndex={startIndex} endIndex={endIndex} totalItems={totalItems} />
+              </>
+            )}
+          </CardContent>
+        
         </Card>
+
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}><DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingEmployee ? 'Edit Employee' : 'Add Employeeใหม่'}</DialogTitle></DialogHeader>
         <div className="grid gap-4 py-4">

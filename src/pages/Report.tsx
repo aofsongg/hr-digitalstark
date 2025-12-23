@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 // import { supabase } from '@/integrations/supabase/client';
 import{supabase} from '../lib/supabaseClient';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -14,6 +14,8 @@ import { COMPANIES } from '@/types/hr';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from '@/components/TablePagination';
 
 export default function Report() {
   const [salaries, setSalaries] = useState<SalaryDetail[]>([]);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 // import { supabase } from '@/integrations/supabase/client';
 import{supabase} from '../lib/supabaseClient';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -29,6 +29,8 @@ import { saveAs } from "file-saver";
 import {getMonthNameEn} from '@/contexts/service_api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { timeStamp } from 'console';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from '@/components/TablePagination';
 
 export default function SalaryPayment() {
   const [salaries, setSalaries] = useState<SalaryDetail[]>([]);
@@ -36,7 +38,8 @@ export default function SalaryPayment() {
   const [filteredSalaries, setFilteredSalaries] = useState<SalaryDetail[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCompany, setFilterCompany] = useState<string>('all');
-  const [filterMonth, setFilterMonth] = useState<string>('all');
+  var current_month = new Date();
+  const [filterMonth, setFilterMonth] = useState<string>(current_month.getFullYear().toString() +'-'+(current_month.getMonth()+1).toString().padStart(2, '0'));
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -51,6 +54,7 @@ export default function SalaryPayment() {
   const getUniqueMonths = () => Array.from(new Set(salaries.filter(s => s.TRANSFER_DATE).map(s => s.TRANSFER_DATE!.substring(0, 7)))).sort().reverse();
   const [generateCompany, setGenerateCompany] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  
   
   const fetchData = async () => {
     setIsLoading(true);
@@ -87,6 +91,7 @@ export default function SalaryPayment() {
     setIsLoading(false);
   };
 
+
   const LoadData = async () => {
  console.log('aaa');
   // load data
@@ -111,40 +116,47 @@ useEffect(() => {
   useEffect(() => { if (selectedCompany) setFilteredEmployees(employees.filter(e => e.COMPANY_NM === selectedCompany)); else setFilteredEmployees([]); }, [selectedCompany, employees]);
   useEffect(() => { const income = formData.BASE_SALARY + formData.OT_AMT + formData.ALLOWANCE_AMT + formData.BONUS_AMT  + formData.HOLIDAY_AMT; const ded = formData.SSO_AMT + formData.WHT_AMT + formData.STUDENT_LOAN + formData.DEDUCTION; setFormData(p => ({ ...p, NET_PAYMENT: income - ded })); }, [formData.BASE_SALARY, formData.OT_AMT, formData.ALLOWANCE_AMT, formData.BONUS_AMT,formData.HOLIDAY_AMT, formData.SSO_AMT, formData.WHT_AMT, formData.STUDENT_LOAN, formData.DEDUCTION]);
   // useEffect(() => { const result = result_deduction; setFormData(p => ({ ...p, DEDUCTION: result_deduction}));});
+
+ const { currentPage, totalPages, paginatedItems, goToPage, resetPage, totalItems, startIndex, endIndex } = usePagination(filteredSalaries);
+
+  useEffect(() => { resetPage(); }, [searchTerm, filterCompany, filterMonth]);
+
+
+
     const handleDelete = async (IDA: string) => { if (!confirm('Do you want to delete the data?')) return; const { error } = await supabase.from('SALARY_DETAIL').delete().eq('IDA', IDA); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Deleted successfully.' }); fetchData(); } };
   const formatCurrency = (amt: number) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amt);
   const handlePreview = (s: SalaryDetail) => { setPreviewSalary(s); setIsPreviewOpen(true);handleOpenDialog(false,s); };
 
   const handleEmployeeSelect = (empId: string) => {
  const emp = employees.find(e => e.EMP_ID === empId);
-  var cal_sos =0;
+  var cal_sso =0;
   if(emp){
     if(emp.BASE_SALARY <= 1650){
-      cal_sos = 83;
+      cal_sso = 83;
     }else if(emp.BASE_SALARY >= 15000){
-      cal_sos = 750;
+      cal_sso = 750;
     }else{
-      cal_sos = (emp.BASE_SALARY*0.05);
+      cal_sso = (emp.BASE_SALARY*0.05);
     } 
   }
   var base_salary = emp.BASE_SALARY <= 15000 ? emp.BASE_SALARY  : 15000;
   var Allowance = emp.BASE_SALARY <= 15000 ? 0  : emp.BASE_SALARY -15000;
 
  if (emp) setFormData(p => ({ ...p, EMP_ID: emp.EMP_ID, COMPANY_NM: emp.COMPANY_NM, EMP_NAME: emp.EMP_NAME, EMP_LNAME: emp.EMP_LNAME,
-   NICK_NAME: emp.NICK_NAME || '', TOTAL_SALARY: emp.BASE_SALARY, BASE_SALARY: base_salary, SSO_AMT: cal_sos,ALLOWANCE_AMT:Allowance, BANK_NAME: emp.BANK_NAME || '', BANK_ACC_NUMBER: emp.BANK_ACC_NUMBER || '',
+   NICK_NAME: emp.NICK_NAME || '', TOTAL_SALARY: emp.BASE_SALARY, BASE_SALARY: base_salary, SSO_AMT: cal_sso,ALLOWANCE_AMT:Allowance, BANK_NAME: emp.BANK_NAME || '', BANK_ACC_NUMBER: emp.BANK_ACC_NUMBER || '',
     BANK_ACC_NAME: emp.BANK_ACC_NAME || '', DEPARTMENT_NM: emp.DEPARTMENT_NM || '', EMAIL: emp.EMAIL })); };
 
-  const onChange_Cal_SOS = (amt: number) =>{
-      var cal_sos =0;
+  const onChange_cal_sso = (amt: number) =>{
+      var cal_sso =0;
     if(amt <= 1650){
-      cal_sos = 83;
+      cal_sso = 83;
     }else if(amt >= 15000){
-      cal_sos = 750;
+      cal_sso = 750;
     }else{
-      cal_sos = (amt*0.05);
+      cal_sso = (amt*0.05);
     }
-    return cal_sos;
-   setFormData({...formData, SSO_AMT: cal_sos ||0});
+    return cal_sso;
+   setFormData({...formData, SSO_AMT: cal_sso ||0});
   }
 
   const onChange_OT = (ot_time:number,base_salary:number)=>{
@@ -720,7 +732,7 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
   saveAs(new Blob([buf]), "salary.xlsx");
 };
 const handleGeneratePayment = async () => {
-    if (!generateCompany) { 
+    if (!generateCompany) {
       toast({ variant: 'destructive', title: 'Error', description: 'กรุณาเลือกบริษัท' }); 
       return; 
     }
@@ -731,37 +743,41 @@ const handleGeneratePayment = async () => {
     }
     setIsGenerating(true);
     try {
+       var now = new Date();
+  var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 26);
+  let filtered = [...salaries];
+  filtered = filtered.filter(s => s.TRANSFER_DATE?.substring(0, 7) === now.getFullYear().toString() +'-'+now.getMonth().toString().padStart(2, '0') && s.EMPLOYEE.COMPANY_NM === generateCompany )
       var ds_list = [];
-      for (const emp of companyEmployees) {
-         var cal_sos =0;
+      for (const emp of filtered) {
+         var cal_sso =0;
   if(emp){
-    if(emp.BASE_SALARY <= 1650){
-      cal_sos = 83;
-    }else if(emp.BASE_SALARY >= 15000){
-      cal_sos = 750;
+    if(emp.EMPLOYEE.BASE_SALARY <= 1650){
+      cal_sso = 83;
+    }else if(emp.EMPLOYEE.BASE_SALARY >= 15000){
+      cal_sso = 750;
     }else{
-      cal_sos = (emp.BASE_SALARY*0.05);
+      cal_sso = (emp.EMPLOYEE.BASE_SALARY*0.05);
     } 
   }
-  var base_salary = emp.BASE_SALARY <= 15000 ? emp.BASE_SALARY  : 15000;
-  var Allowance = emp.BASE_SALARY <= 15000 ? 0  : emp.BASE_SALARY -15000;
-  var now = new Date();
-     var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 26);
+
+  var Allowance = emp.EMPLOYEE.BASE_SALARY - emp.BASE_SALARY;
+ var net_payment = emp.EMPLOYEE.BASE_SALARY  - cal_sso - emp.WHT_AMT - emp.STUDENT_LOAN;
+
         const salaryData = {
           EMP_ID: emp.EMP_ID,
-          EMP_NAME: emp.EMP_NAME + ' ' + emp.EMP_LNAME,
-          BASE_SALARY: base_salary,
+          EMP_NAME: emp.EMP_NAME,
+          BASE_SALARY: emp.BASE_SALARY,
           OT_TIME: 0, OT_AMT: 0, ALLOWANCE_AMT: Allowance,
-          BONUS_AMT: 0, SSO_AMT: cal_sos, WHT_AMT: 0,LWP_DAY:0,
-          STUDENT_LOAN: 0, DEDUCTION: 0,DEDUCTION_REMARK:'OTHER',
-          NET_PAYMENT: 0, TRANSFER_DATE: TF_DATE ,
+          BONUS_AMT: 0, SSO_AMT: cal_sso, WHT_AMT: emp.WHT_AMT,LWP_DAY:0,
+          STUDENT_LOAN: emp.STUDENT_LOAN, DEDUCTION: emp.STUDENT_LOAN,DEDUCTION_REMARK:'OTHER',
+          NET_PAYMENT: net_payment.toFixed(2), TRANSFER_DATE: TF_DATE ,
           REMARK:'',SENT_DATE:null,HOLIDAY_DAY: 0,HOLIDAY_AMT: 0,HOLIDAY_MP: 0,
         };
 
         ds_list.push(salaryData);
       }
-      console.log(ds_list);
-      const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
+
+       const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
       setGenerateCompany('');
     } catch {
       toast({ variant: 'destructive', title: 'Error', description: 'Fail' });
@@ -790,8 +806,42 @@ const handleGeneratePayment = async () => {
             <Button onClick={() => handleOpenDialog(true)} className="gap-2 gradient-primary hover:opacity-90"><Plus className="w-4 h-4" /> Add Item</Button>
           </div>
         </div>
-       <Card className="shadow-card"><CardHeader className="pb-4"><div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><CardTitle className="text-lg">Salary List Item</CardTitle><div className="flex flex-col md:flex-row gap-3 w-full md:w-auto"><div className="relative w-full md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" /></div><Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="บริษัท" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select><Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="เดือน" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select><Button onClick={() => exportSalaryToExcel(filteredSalaries)} className="gap-2 gradient-primary"><Plus className="w-4 h-4" /> Export Excel By Filter</Button></div></div></CardHeader>
-         <CardContent>{isLoading ? <LoadingSpinner text="Loading..." /> : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead>Sent Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredSalaries.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredSalaries.map(s => { const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT + s.HOLIDAY_AMT; const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION; return <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell>{s.SENT_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(true,s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>; })}</TableBody></Table></div>}</CardContent>
+         <Card className="shadow-card">
+          <CardHeader className="pb-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <CardTitle className="text-lg">Salary List</CardTitle>
+              <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                <div className="relative w-full md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" /></div>
+                <Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Company" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">ทั้งหมด</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+                <Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="Month" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">ทั้งหมด</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? <LoadingSpinner text="Loading payroll data..." /> : (
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead>Sent Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {paginatedItems.length === 0 ? (
+                        <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow>
+                      ) : paginatedItems.map(s => {
+                        const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT + s.HOLIDAY_AMT;
+                         const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION
+                        return (
+                          <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell>{s.SENT_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(true,s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+                <TablePagination currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} startIndex={startIndex} endIndex={endIndex} totalItems={totalItems} />
+              </>
+            )}
+          </CardContent>
+        
+        
         </Card>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}><DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingSalary ? 'Edit' : 'Add Item'}</DialogTitle></DialogHeader>
