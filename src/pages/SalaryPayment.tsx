@@ -93,14 +93,13 @@ export default function SalaryPayment() {
 
 
   const LoadData = async () => {
- console.log('aaa');
   // load data
 };
   
   useEffect(() => { fetchData(); }, []);
 useEffect(() => {
   // logic ที่ต้องการให้โหลดใหม่
-  console.log('reload');
+  // console.log('reload');
 
 }, [isLoading]);
   // useEffect(() => { const term = searchTerm.toLowerCase(); setFilteredSalaries(salaries.filter(s => (s.EMPLOYEE.COMPANY_NM?.toLowerCase() || '').includes(term) || (s.EMP_NAME?.toLowerCase() || '').includes(term) || (s.EMP_LNAME?.toLowerCase() || '').includes(term)|| (s.TRANSFER_DATE?.toLowerCase() || '').includes(term))); }, [searchTerm, salaries]);
@@ -194,8 +193,6 @@ useEffect(() => {
      var now = new Date();
      var Years = now.getFullYear();
      var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 25);
-        console.log(TF_DATE)
-        console.log(Years);
 
         if(Years == 2025){chk_holiday_mp =1.5}else{chk_holiday_mp=1};
         
@@ -204,7 +201,6 @@ useEffect(() => {
     const  { data, error } = await supabase.rpc('get_salary_with_emp_obj', {
     p_ida : salary.IDA
     });
-    console.log(data,error)
 
       // data[0].add(LWP_AMT: Number(cal_lwp));
       //  setFormData({ ...formData, LWP_AMT: Number(cal_lwp) });
@@ -230,10 +226,8 @@ useEffect(() => {
   };
 
   const handleSave = async (sent_mail) => {
-    console.log(formData);
     if (!formData.EMP_ID || !formData.COMPANY_NM) { toast({ variant: 'destructive', title: 'Error', description: 'Please select a company and an employee.' }); return; }
     const dataToSave = { ...formData, TRANSFER_DATE: formData.TRANSFER_DATE ? format(formData.TRANSFER_DATE, 'yyyy-MM-dd') : null };
-    console.log( new Date().setHours(new Date().getHours() + 7), new Date(),new Date().getHours() + 7);
    if(sent_mail == true){
       const thaiDate = new Date(
       new Date().setHours(new Date().getHours() + 7)
@@ -261,7 +255,6 @@ useEffect(() => {
     delete dataToSave.TOTAL_SALARY;
     delete dataToSave.LWP_AMT;
     
-     console.log(dataToSave);
     if (editingSalary) { const { error } = await supabase.from('SALARY_DETAIL').update(dataToSave).eq('IDA', editingSalary.IDA);   console.log(error);if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.' }); setIsDialogOpen(false); fetchData(); } }
     else { const { error } = await supabase.from('SALARY_DETAIL').insert([dataToSave]);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.' }); setIsDialogOpen(false); fetchData(); } }
 
@@ -458,7 +451,6 @@ const generatePDF = (type_p:String) => {
   type Row = { label: string; earning?: number; deduction?: number; };
   var rows: Row[]=[];
 if(previewSalary.HOLIDAY_AMT > 0){
-  console.log("HOLIDAY_AMT");
   rows = [
     { label: 'Base Salary',      earning: previewSalary.BASE_SALARY },
     { label: 'Allowance',         earning: previewSalary.ALLOWANCE_AMT},
@@ -471,7 +463,6 @@ if(previewSalary.HOLIDAY_AMT > 0){
     { label: 'Deduction ('+ previewSalary.DEDUCTION_REMARK +')', deduction: previewSalary.DEDUCTION },
   ];
 }else{
-   console.log("GGGG");
    rows = [
     { label: 'Base Salary',      earning: previewSalary.BASE_SALARY },
     { label: 'Allowance',         earning: previewSalary.ALLOWANCE_AMT},
@@ -483,8 +474,6 @@ if(previewSalary.HOLIDAY_AMT > 0){
     { label: 'Deduction ('+ previewSalary.DEDUCTION_REMARK +')', deduction: previewSalary.DEDUCTION },
   ];
 }
- console.log(rows);
-
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
 
@@ -599,7 +588,6 @@ doc.text(formatCurrency(netPay), netBoxX + netBoxW / 2, netBoxY + 8 + 20, {
 
 // ใช้ฟอนต์ไทย
 doc.setFont('THSarabunNew', 'normal');
-// console.log(thaiMoneyText(netPay));
 doc.setFontSize(14);
 doc.text(
   thaiMoneyText(netPay),
@@ -744,8 +732,8 @@ const handleGeneratePayment = async () => {
     setIsGenerating(true);
     try {
   var now = new Date();
-  var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 25);
-  var set_beforMonth = new Date(now.getFullYear(), (now.getMonth()), 25);
+  var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 26);
+  var set_beforMonth = new Date(now.getFullYear(), (now.getMonth()), 26);
 
   set_beforMonth = new Date(set_beforMonth.setMonth(set_beforMonth.getMonth() - 1));
   let filtered = [...salaries];
@@ -786,7 +774,7 @@ const handleGeneratePayment = async () => {
         ds_list.push(salaryData);
       }
 
-      //  const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
+        const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
       setGenerateCompany('');
     } catch {
       toast({ variant: 'destructive', title: 'Error', description: 'Fail' });

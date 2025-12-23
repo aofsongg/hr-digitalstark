@@ -68,7 +68,6 @@ export default function UserManagement() {
     }
     if (editingUser) {
       const { error } = await supabase.from('USER_INFO').update(formData).eq('IDA', editingUser.IDA);
-      console.log(error);
       if (error) toast({ variant: 'destructive', title: 'Error', description: 'Unable to update.' });
       else { toast({ title: 'Successful.', description: 'Information updated successfully.' }); setIsDialogOpen(false); fetchUsers(); }
     } else {

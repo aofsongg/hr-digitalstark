@@ -5,7 +5,6 @@ import type { UserInfo } from '@/types/hr';
 
 
 export const getMonthNameEn =(monthNumber) =>{
-  console.log(monthNumber);
   const months = [
     null, // ช่องที่ 0 ไม่ใช้ จะได้เรียกด้วยเลขเดือนตรง ๆ
     "January",
@@ -32,10 +31,8 @@ export const getMonthNameEn =(monthNumber) =>{
 
 
 export const send_email = async (to,NAME,TRANSFER_DATE:Date,pdfBase64,Remark) => {
-  console.log(TRANSFER_DATE.getMonth());
   var date_str = getMonthNameEn(TRANSFER_DATE.getMonth()+1) +' ' +TRANSFER_DATE.getFullYear().toString();
 
-    console.log(date_str,to);
     var text_str = "<b>Dear "+NAME+",</b><br/>";
     if(Remark.length>0){
      text_str += "<br/> Remark: "+ Remark 

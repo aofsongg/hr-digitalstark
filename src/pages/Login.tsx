@@ -29,9 +29,6 @@ export default function Login() {
     .select('*')
     .eq('USER_NAME', 'admin')
     .eq('USER_PASS', 'admin');
-
-  console.log('data =', data);
-  console.log('error =', error);
 }
 
   const handleSubmit = async (e: React.FormEvent) => {
