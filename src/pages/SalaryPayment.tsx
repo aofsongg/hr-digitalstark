@@ -49,7 +49,9 @@ export default function SalaryPayment() {
   const [pdfBase64, setPdfBase64] = useState<string>('');
   const [result_deduction, setResultDeduction] = useState<number>(0);
   const getUniqueMonths = () => Array.from(new Set(salaries.filter(s => s.TRANSFER_DATE).map(s => s.TRANSFER_DATE!.substring(0, 7)))).sort().reverse();
-
+  const [generateCompany, setGenerateCompany] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  
   const fetchData = async () => {
     setIsLoading(true);
     const [salaryRes, empRes] = await Promise.all([supabase.from('SALARY_DETAIL').select('*').order('CREATE_DATE', { ascending: false }), supabase.from('EMPLOYEE').select('*').order('EMP_NAME')]);
@@ -263,22 +265,6 @@ useEffect(() => {
     setIsLoading(false);
   };
 
-   // emailjs.send(
-    //   'YOUR_SERVICE_ID',
-    //   'YOUR_TEMPLATE_ID',
-    //   {
-    //     from_name: name,
-    //     reply_to: email,
-    //     message: msg,
-    //   },
-    //   'YOUR_PUBLIC_KEY'
-    // )
-    // .then(() => setResult('ส่งอีเมลSuccessful. ✅'))
-    // .catch(() => setResult('ส่งอีเมลไม่Successful. ❌'));
-    
-  //  toast({ title: 'EMAIL Sent', description: `Sent to ${previewSalary?.EMPLOYEE.EMAIL}` }); 
-
-// ถ้ามีอยู่แล้วใช้ของเดิมได้เลย
 const thaiMoneyText = (num: number) => {
   const thNum = ["ศูนย์","หนึ่ง","สอง","สาม","สี่","ห้า","หก","เจ็ด","แปด","เก้า"];
   const thDigit = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
@@ -733,13 +719,77 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
   const buf = await workbook.xlsx.writeBuffer();
   saveAs(new Blob([buf]), "salary.xlsx");
 };
+const handleGeneratePayment = async () => {
+    if (!generateCompany) { 
+      toast({ variant: 'destructive', title: 'Error', description: 'กรุณาเลือกบริษัท' }); 
+      return; 
+    }
+    const companyEmployees = employees.filter(e => e.COMPANY_NM === generateCompany);
+    if (companyEmployees.length === 0) {
+      toast({ variant: 'destructive', title: 'Error', description: 'ไม่พบพนักงานในบริษัทนี้' });
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      var ds_list = [];
+      for (const emp of companyEmployees) {
+         var cal_sos =0;
+  if(emp){
+    if(emp.BASE_SALARY <= 1650){
+      cal_sos = 83;
+    }else if(emp.BASE_SALARY >= 15000){
+      cal_sos = 750;
+    }else{
+      cal_sos = (emp.BASE_SALARY*0.05);
+    } 
+  }
+  var base_salary = emp.BASE_SALARY <= 15000 ? emp.BASE_SALARY  : 15000;
+  var Allowance = emp.BASE_SALARY <= 15000 ? 0  : emp.BASE_SALARY -15000;
+  var now = new Date();
+     var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 26);
+        const salaryData = {
+          EMP_ID: emp.EMP_ID,
+          EMP_NAME: emp.EMP_NAME + ' ' + emp.EMP_LNAME,
+          BASE_SALARY: base_salary,
+          OT_TIME: 0, OT_AMT: 0, ALLOWANCE_AMT: Allowance,
+          BONUS_AMT: 0, SSO_AMT: cal_sos, WHT_AMT: 0,LWP_DAY:0,
+          STUDENT_LOAN: 0, DEDUCTION: 0,DEDUCTION_REMARK:'OTHER',
+          NET_PAYMENT: 0, TRANSFER_DATE: TF_DATE ,
+          REMARK:'',SENT_DATE:null,HOLIDAY_DAY: 0,HOLIDAY_AMT: 0,HOLIDAY_MP: 0,
+        };
 
+        ds_list.push(salaryData);
+      }
+      console.log(ds_list);
+      const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
+      setGenerateCompany('');
+    } catch {
+      toast({ variant: 'destructive', title: 'Error', description: 'Fail' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center"><DollarSign className="w-6 h-6 text-primary-foreground" /></div><div><h1 className="text-2xl font-bold">Salary & Payment</h1><p className="text-muted-foreground">Salary Detail</p></div></div><Button onClick={() => handleOpenDialog(true)} className="gap-2 gradient-primary hover:opacity-90"><Plus className="w-4 h-4" /> Add Item</Button></div>
+       <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center"><DollarSign className="w-6 h-6 text-primary-foreground" /></div>
+            <div><h1 className="text-2xl font-bold">Salary & Payment</h1><p className="text-muted-foreground">จัดการเงินเดือน</p></div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Select value={generateCompany} onValueChange={setGenerateCompany}>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Select Company" /></SelectTrigger>
+              <SelectContent className="bg-popover">{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            </Select>
+            <Button onClick={handleGeneratePayment} disabled={isGenerating || !generateCompany} variant="secondary" className="gap-2">
+              {isGenerating ? <LoadingSpinner size="sm" /> : <DollarSign className="w-4 h-4" />} Generate Payment
+            </Button>
+            <Button onClick={() => handleOpenDialog(true)} className="gap-2 gradient-primary hover:opacity-90"><Plus className="w-4 h-4" /> Add Item</Button>
+          </div>
+        </div>
        <Card className="shadow-card"><CardHeader className="pb-4"><div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4"><CardTitle className="text-lg">Salary List Item</CardTitle><div className="flex flex-col md:flex-row gap-3 w-full md:w-auto"><div className="relative w-full md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" /></div><Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="บริษัท" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select><Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="เดือน" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select><Button onClick={() => exportSalaryToExcel(filteredSalaries)} className="gap-2 gradient-primary"><Plus className="w-4 h-4" /> Export Excel By Filter</Button></div></div></CardHeader>
          <CardContent>{isLoading ? <LoadingSpinner text="Loading..." /> : <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Company</TableHead><TableHead>Employee</TableHead><TableHead className="text-right">Total Compensation</TableHead><TableHead className="text-right">Income</TableHead><TableHead className="text-right">Deduction</TableHead><TableHead className="text-right">Net</TableHead><TableHead>Transfer Date</TableHead><TableHead>Sent Date</TableHead><TableHead className="text-right">Manage</TableHead></TableRow></TableHeader><TableBody>{filteredSalaries.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Not Found Data.</TableCell></TableRow> : filteredSalaries.map(s => { const inc = s.BASE_SALARY + s.OT_AMT + s.ALLOWANCE_AMT + s.BONUS_AMT + s.HOLIDAY_AMT; const ded = s.SSO_AMT + s.WHT_AMT + s.STUDENT_LOAN + s.DEDUCTION; return <TableRow key={s.IDA}><TableCell>{s.EMPLOYEE.COMPANY_NM}</TableCell><TableCell>{s.EMPLOYEE.TITLE} {s.EMP_NAME} {s.EMP_LNAME}({s.EMPLOYEE.NICK_NAME})</TableCell><TableCell className="text-right">{formatCurrency(s.EMPLOYEE.BASE_SALARY)}</TableCell><TableCell className="text-right text-success">{formatCurrency(inc)}</TableCell><TableCell className="text-right text-destructive">{formatCurrency(ded)}</TableCell><TableCell className="text-right font-semibold">{formatCurrency(s.NET_PAYMENT)}</TableCell><TableCell>{s.TRANSFER_DATE || '-'}</TableCell><TableCell>{s.SENT_DATE || '-'}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => handlePreview(s)}><FileText className="w-4 h-4" /></Button><Button size="sm" variant="outline" onClick={() => handleOpenDialog(true,s)}><Pencil className="w-4 h-4" /></Button><Button size="sm" variant="destructive" onClick={() => handleDelete(s.IDA)}><Trash2 className="w-4 h-4" /></Button></div></TableCell></TableRow>; })}</TableBody></Table></div>}</CardContent>
         </Card>
