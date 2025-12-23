@@ -733,20 +733,29 @@ const exportSalaryToExcel = async (rows: SalaryDetail[]) => {
 };
 const handleGeneratePayment = async () => {
     if (!generateCompany) {
-      toast({ variant: 'destructive', title: 'Error', description: 'กรุณาเลือกบริษัท' }); 
+      toast({ variant: 'destructive', title: 'Error', description: 'Plase Select Company' }); 
       return; 
     }
     const companyEmployees = employees.filter(e => e.COMPANY_NM === generateCompany);
     if (companyEmployees.length === 0) {
-      toast({ variant: 'destructive', title: 'Error', description: 'ไม่พบพนักงานในบริษัทนี้' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Not Found The Company.' });
       return;
     }
     setIsGenerating(true);
     try {
-       var now = new Date();
-  var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 26);
+  var now = new Date();
+  var TF_DATE = new Date(now.getFullYear(), now.getMonth(), 25);
+  var set_beforMonth = new Date(now.getFullYear(), (now.getMonth()), 25);
+
+  set_beforMonth = new Date(set_beforMonth.setMonth(set_beforMonth.getMonth() - 1));
   let filtered = [...salaries];
-  filtered = filtered.filter(s => s.TRANSFER_DATE?.substring(0, 7) === now.getFullYear().toString() +'-'+now.getMonth().toString().padStart(2, '0') && s.EMPLOYEE.COMPANY_NM === generateCompany )
+   if(filtered.filter(s => s.TRANSFER_DATE?.substring(0, 7) === now.getFullYear().toString() +'-'+(now.getMonth()+1).toString().padStart(2, '0') && s.EMPLOYEE.COMPANY_NM === generateCompany).length>0){
+  toast({ variant: 'destructive', title: 'Fail', description: 'This month’s data for the selected '+ generateCompany + ' already exists.' });
+    setGenerateCompany('');
+  return;
+    }
+   
+  filtered = filtered.filter(s => s.TRANSFER_DATE?.substring(0, 7) === set_beforMonth.getFullYear().toString() +'-'+(set_beforMonth.getMonth()+1).toString().padStart(2, '0') && s.EMPLOYEE.COMPANY_NM === generateCompany )
       var ds_list = [];
       for (const emp of filtered) {
          var cal_sso =0;
@@ -777,7 +786,7 @@ const handleGeneratePayment = async () => {
         ds_list.push(salaryData);
       }
 
-       const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
+      //  const { error } = await supabase.from('SALARY_DETAIL').insert(ds_list);console.log(error); if (error) toast({ variant: 'destructive', title: 'Error' }); else { toast({ title: 'Successful.', description: `Create Salary List  ${companyEmployees.length} Item` }); setIsDialogOpen(false); fetchData(); } 
       setGenerateCompany('');
     } catch {
       toast({ variant: 'destructive', title: 'Error', description: 'Fail' });
