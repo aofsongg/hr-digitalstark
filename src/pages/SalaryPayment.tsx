@@ -270,30 +270,53 @@ useEffect(() => {
     setIsLoading(false);
   };
 
-const thaiMoneyText = (num: number) => {
+const thaiMoneyText = (num: number): string => {
   const thNum = ["ศูนย์","หนึ่ง","สอง","สาม","สี่","ห้า","หก","เจ็ด","แปด","เก้า"];
-  const thDigit = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
+  const thUnit = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
 
   const readNumber = (n: number): string => {
-    let text = "";
-    let unit = 0;
+    if (n === 0) return "";
+
+    let result = "";
+    let unitIndex = 0;
 
     while (n > 0) {
       const digit = n % 10;
+
       if (digit !== 0) {
-        text = thNum[digit] + thDigit[unit] + text;
+        let text = "";
+
+        if (unitIndex === 0 && digit === 1 && n > 1) {
+          text = "เอ็ด";
+        } else if (unitIndex === 1 && digit === 2) {
+          text = "ยี่";
+        } else if (unitIndex === 1 && digit === 1) {
+          text = "";
+        } else {
+          text = thNum[digit];
+        }
+
+        result = text + thUnit[unitIndex] + result;
       }
-      unit++;
+
+      unitIndex++;
       n = Math.floor(n / 10);
+
+      if (unitIndex === 6 && n > 0) {
+        result = "ล้าน" + result;
+        unitIndex = 0;
+      }
     }
 
-    return text === "" ? thNum[0] : text;
+    return result;
   };
 
   const integer = Math.floor(num);
   const satang = Math.round((num - integer) * 100);
 
-  let result = readNumber(integer) + "บาท";
+  let result = "";
+
+  result += integer === 0 ? "ศูนย์บาท" : readNumber(integer) + "บาท";
 
   if (satang === 0) {
     result += "ถ้วน";
@@ -809,8 +832,8 @@ const handleGeneratePayment = async () => {
               <CardTitle className="text-lg">Salary List</CardTitle>
               <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" /></div>
-                <Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Company" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">ทั้งหมด</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
-                <Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="Month" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">ทั้งหมด</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
+                <Select value={filterCompany} onValueChange={setFilterCompany}><SelectTrigger className="w-full md:w-48"><SelectValue placeholder="Company" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{COMPANIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+                <Select value={filterMonth} onValueChange={setFilterMonth}><SelectTrigger className="w-full md:w-40"><SelectValue placeholder="Month" /></SelectTrigger><SelectContent className="bg-popover"><SelectItem value="all">All</SelectItem>{getUniqueMonths().map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
               </div>
             </div>
           </CardHeader>
@@ -837,8 +860,6 @@ const handleGeneratePayment = async () => {
               </>
             )}
           </CardContent>
-        
-        
         </Card>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}><DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingSalary ? 'Edit' : 'Add Item'}</DialogTitle></DialogHeader>
