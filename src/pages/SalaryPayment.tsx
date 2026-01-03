@@ -774,7 +774,7 @@ const handleGeneratePayment = async () => {
     if(emp.EMPLOYEE.BASE_SALARY <= 1650){
       cal_sso = 83;
     }else if(emp.EMPLOYEE.BASE_SALARY >= 17500){
-      cal_sso = 750;
+      cal_sso = 875;
     }else{
       cal_sso = (emp.EMPLOYEE.BASE_SALARY*0.05);
     } 
