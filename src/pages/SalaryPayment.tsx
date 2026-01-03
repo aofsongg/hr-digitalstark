@@ -132,8 +132,8 @@ useEffect(() => {
   if(emp){
     if(emp.BASE_SALARY <= 1650){
       cal_sso = 83;
-    }else if(emp.BASE_SALARY >= 15000){
-      cal_sso = 750;
+    }else if(emp.BASE_SALARY >= 17500){
+      cal_sso = 875;
     }else{
       cal_sso = (emp.BASE_SALARY*0.05);
     } 
@@ -149,8 +149,8 @@ useEffect(() => {
       var cal_sso =0;
     if(amt <= 1650){
       cal_sso = 83;
-    }else if(amt >= 15000){
-      cal_sso = 750;
+    }else if(amt >= 17500){
+      cal_sso = 875;
     }else{
       cal_sso = (amt*0.05);
     }
@@ -270,7 +270,7 @@ useEffect(() => {
     setIsLoading(false);
   };
 
-const thaiMoneyText = (num: number): string => {
+const thaiMoneyText = (num: number) => {
   const thNum = ["ศูนย์","หนึ่ง","สอง","สาม","สี่","ห้า","หก","เจ็ด","แปด","เก้า"];
   const thUnit = ["","สิบ","ร้อย","พัน","หมื่น","แสน","ล้าน"];
 
@@ -773,7 +773,7 @@ const handleGeneratePayment = async () => {
   if(emp){
     if(emp.EMPLOYEE.BASE_SALARY <= 1650){
       cal_sso = 83;
-    }else if(emp.EMPLOYEE.BASE_SALARY >= 15000){
+    }else if(emp.EMPLOYEE.BASE_SALARY >= 17500){
       cal_sso = 750;
     }else{
       cal_sso = (emp.EMPLOYEE.BASE_SALARY*0.05);
@@ -860,6 +860,8 @@ const handleGeneratePayment = async () => {
               </>
             )}
           </CardContent>
+        
+        
         </Card>
       </div>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}><DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{editingSalary ? 'Edit' : 'Add Item'}</DialogTitle></DialogHeader>
